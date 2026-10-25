@@ -92,15 +92,20 @@ Power System Load Classification/
 ├── requirements.txt               # Locked production & experimentation dependencies
 ├── data/
 │   └── raw/
-│       ├── .gitkeep
 │       └── load_data.csv          # Telemetry dataset (35,041 records)
+├── models/
+│   ├── final_random_forest.joblib # Serialized production Random Forest pipeline
+│   └── model_metadata.json        # Feature schema, target classes, & training bounds
 ├── notebook/
-│   └── data_audit.ipynb           # EDA, data hygiene, distributions & sanity audits
-├── reports/
-│   └── figures/
-│       └── .gitkeep               # Generated visualization artifacts
+│   ├── data_audit.ipynb           # EDA, data hygiene, distributions & sanity audits
+│   └── feature_engineering_modeling.ipynb # Feature pipeline, CV evaluation & model training
+├── results/
+│   ├── final_metrics.json         # Final holdout evaluation performance metrics
+│   └── final_predictions.csv      # December holdout test predictions
 └── src/
-    └── .gitkeep                   # Reusable ETL, feature engineering & model modules
+    ├── __init__.py                # Source package initialization
+    ├── predict.py                 # Batch CLI inference pipeline
+    └── preprocessing.py           # Custom PowerFactorCleaner transformer
 ```
 
 ---
