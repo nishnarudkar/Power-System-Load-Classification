@@ -21,28 +21,15 @@ if not METADATA_PATH.exists():
 
 
 def prepare_features(df):
-    df = df.copy()
+    from src.preprocessing import add_calendar_features
 
+    df = df.copy()
     df["Date_Time"] = pd.to_datetime(
         df["Date_Time"],
         dayfirst=True,
         errors="raise"
     )
-
-    df["Hour"] = df["Date_Time"].dt.hour
-    df["Day_of_Week"] = df["Date_Time"].dt.day_of_week
-    df["Month"] = df["Date_Time"].dt.month
-
-    df["Time_Slot"] = (
-        df["Date_Time"].dt.hour * 4
-        + df["Date_Time"].dt.minute // 15
-    )
-
-    df["Is_Weekend"] = (
-        df["Day_of_Week"] >= 5
-    ).astype(int)
-
-    return df
+    return add_calendar_features(df)
 
 
 def predict(input_path, output_path):

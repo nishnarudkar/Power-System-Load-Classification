@@ -162,37 +162,37 @@ To simulate real-world deployment and prevent lookahead data leakage:
 
 ## Model Evaluation and Results
 
-### Validation Benchmarks (Development Set)
+### Model Evaluation and Benchmarks
 
-Models evaluated on the validation partition (October–November 2018):
+Models evaluated across cross-validation and the untouched December 2018 holdout partition (2,976 observations):
 
-| Model Architecture | Feature Subset | Validation Accuracy | Validation Macro $F_1$ |
+| Model Architecture | Feature Representation | Holdout Accuracy | Holdout Macro $F_1$ |
 |---|---|:---:|:---:|
-| Dummy Classifier (Stratified) | Calendar | 48.36% | 0.2173 |
-| Decision Tree Classifier | Calendar | 83.47% | 0.7898 |
-| Random Forest Classifier | Calendar Only | 83.47% | 0.7898 |
-| **Combined Random Forest** | **Calendar + Telemetry** | **83.73%** | **0.7925** |
+| Dummy Baseline (Stratified) | Majority Class Baseline | 58.60% | 0.2460 |
+| Decision Tree Classifier | Calendar Only | 83.47% | 0.7898 |
+| Initial Combined Random Forest | Calendar + Telemetry (with `Month`) | 89.50% | 0.8650 |
+| **Final Random Forest** | **Calendar + Telemetry + `Schedule_Regime` (no `Month`)** | **95.53%** | **0.9482** |
 
 ### Final Evaluation on December 2018 Holdout
 
-The final frozen Random Forest pipeline was evaluated against the out-of-time December 2018 holdout partition (2,976 records):
+The final frozen Random Forest pipeline with custom `SensorCleaner` and seasonal `Schedule_Regime` was evaluated against the out-of-time December 2018 holdout:
 
 | Metric | Score |
 |---|:---:|
-| **Accuracy** | **89.15%** |
-| **Macro Precision** | **86.92%** |
-| **Macro Recall** | **87.15%** |
-| **Macro $F_1$-Score** | **86.31%** |
+| **Accuracy** | **95.53%** |
+| **Macro Precision** | **95.24%** |
+| **Macro Recall** | **94.44%** |
+| **Macro $F_1$-Score** | **94.82%** |
 
 ### Per-Class Performance Breakdown
 
 | Class | Precision | Recall | $F_1$-Score | Support (Records) |
 |---|:---:|:---:|:---:|:---:|
-| **Light_Load** | 0.98 | 0.91 | 0.94 | 1,744 |
-| **Maximum_Load** | 0.90 | 0.76 | 0.82 | 528 |
-| **Medium_Load** | 0.73 | 0.95 | 0.82 | 704 |
-| **Macro Average** | **0.87** | **0.87** | **0.86** | **2,976** |
-| **Weighted Average** | **0.91** | **0.89** | **0.89** | **2,976** |
+| **Light_Load** | 0.960 | 0.969 | 0.965 | 1,744 |
+| **Medium_Load** | 0.947 | 0.959 | 0.953 | 704 |
+| **Maximum_Load** | 0.950 | 0.905 | 0.927 | 528 |
+| **Macro Average** | **0.952** | **0.944** | **0.948** | **2,976** |
+| **Weighted Average** | **0.955** | **0.955** | **0.955** | **2,976** |
 
 ---
 

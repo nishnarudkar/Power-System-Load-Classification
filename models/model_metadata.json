@@ -1,10 +1,9 @@
 {
-    "model_name": "Combined Random Forest",
+    "model_name": "RF + regime, no Month",
     "target": "Load_Type",
     "features": [
         "Hour",
         "Day_of_Week",
-        "Month",
         "Time_Slot",
         "Is_Weekend",
         "Usage_kWh",
@@ -12,13 +11,15 @@
         "Leading_Current_Reactive_Power_kVarh",
         "CO2(tCO2)",
         "Lagging_Current_Power_Factor",
-        "Leading_Current_Power_Factor"
+        "Leading_Current_Power_Factor",
+        "Schedule_Regime"
     ],
     "classes": [
         "Light_Load",
         "Maximum_Load",
         "Medium_Load"
     ],
-    "training_period": "January\u2013November 2018",
+    "preprocessing": "src/preprocessing.py: load_clean_timeline, add_calendar_features, SensorCleaner",
+    "training_period": "January–November 2018",
     "test_period": "December 2018"
 }

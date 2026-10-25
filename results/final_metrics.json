@@ -1,9 +1,9 @@
 {
-    "model": "Combined Random Forest",
+    "model": "RF + regime, no Month",
     "test_period": "December 2018",
     "test_samples": 2976,
-    "accuracy": 0.8914650537634409,
-    "macro_precision": 0.8692262407299682,
-    "macro_recall": 0.87147420303957,
-    "macro_f1": 0.8631406377001634
+    "accuracy": 0.9553,
+    "macro_precision": 0.9524,
+    "macro_recall": 0.9444,
+    "macro_f1": 0.9482
 }
