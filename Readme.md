@@ -210,7 +210,7 @@ $$\text{Macro } F_1 = \frac{1}{K}\sum_{k=1}^K F_{1, k}, \quad K = 3$$
 
 ## 📬 Submission & Author Details
 
-- **Candidate:** Nishchay Narudkar
+- **Candidate:** Nishant Narudkar
 - **Submission For:** USEReady Internship Assessment
 - **Deliverable:** Jupyter Notebook & GitHub Project Repository
 - **Repository:** [Power-System-Load-Classification](https://github.com/nishnarudkar/Power-System-Load-Classification)
