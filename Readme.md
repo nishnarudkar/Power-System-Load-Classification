@@ -1,216 +1,223 @@
 # Power System Load Classification
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Scikit-Learn](https://img.shields.io/badge/scikit_learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
-[![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white)](https://jupyter.org/)
-[![Status](https://img.shields.io/badge/Status-Active%20Development-blue?style=for-the-badge)](#)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square)](https://www.python.org/)
+[![Scikit-Learn](https://img.shields.io/badge/scikit_learn-1.4+-F7931E?style=flat-square)](https://scikit-learn.org/)
+[![Pandas](https://img.shields.io/badge/Pandas-2.2+-150458?style=flat-square)](https://pandas.pydata.org/)
+[![Status](https://img.shields.io/badge/Status-Completed-success?style=flat-square)](#)
 
-> **Internship Assignment Submission**  
-> **Organization:** [USEReady](https://www.useready.com/)  
-> **Program:** Internship Selection Program  
-> **Topic:** Supervised Machine Learning for Power System Load Classification  
-
----
-
-## 📌 Executive Summary
-
-Modern smart grid management and industrial energy optimization rely on accurate operational state awareness. This project implements an end-to-end Machine Learning pipeline to classify industrial power system operating conditions into three distinct operational states:
-
-- **`Light_Load`** — Minimal energy consumption (e.g., non-operational hours, night shifts).
-- **`Medium_Load`** — Moderate industrial activity (standard daytime operational baseline).
-- **`Maximum_Load`** — Peak operating capacity and intensive electrical utilization.
-
-By analyzing multi-dimensional telemetry (active/reactive power consumption, power factors, CO₂ emissions, and temporal markers), the predictive model facilitates load forecasting, automated grid demand balancing, peak demand management, and billing tier optimization.
+> **Internship Technical Assessment**  
+> **Organization:** USEReady  
+> **Topic:** Supervised Machine Learning for Industrial Power System Load Classification  
+> **Candidate:** Nishant Narudkar  
 
 ---
 
-## 🎯 Assignment Objectives & Scope
+## Executive Summary
 
-This repository fulfills the technical assessment assigned by **USEReady** for the Internship Program:
+Efficient electrical grid management and industrial energy optimization require accurate, automated classification of operating load profiles. This repository presents an end-to-end machine learning system designed to classify industrial power system operating conditions into three operational states:
 
-1. **Exploratory Data Analysis & Audit:** Comprehensive assessment of raw telemetry data, including distributions, class imbalance, missing value profiles, and timestamp consistency.
-2. **Robust Data Preprocessing:** Leakage-free handling of missing entries, time-series feature engineering, and cyclic encoding of temporal patterns.
-3. **Temporal Validation Protocol:** Strict chronological data splitting ensuring the final calendar month (December 2018) is isolated as an untouched out-of-time holdout test set.
-4. **Model Exploration & Benchmarking:** Systematic comparison of baseline heuristics, linear estimators, tree-based ensembles, and gradient boosting architectures.
-5. **Performance Evaluation:** Holistic assessment leveraging macro-averaged metrics ($F_1$-score, precision, recall) and multi-class confusion matrices to address target imbalance.
-6. **Reproducibility & Code Cleanliness:** Modular repository structure with documented dependencies and reproducible Jupyter execution.
+- **Light_Load**: Low-consumption operating regime (typically corresponding to night shifts, weekends, and non-operational intervals).
+- **Medium_Load**: Standard daytime baseline operational capacity.
+- **Maximum_Load**: High-intensity electrical demand during peak operating hours.
+
+By analyzing multivariate telemetry—encompassing real active power consumption, leading and lagging reactive energy, power factor indicators, CO2 emissions, and temporal markers—the trained pipeline enables proactive load forecasting, automated demand balancing, peak-demand management, and dynamic tariff optimization.
 
 ---
 
-## 📊 Dataset Profile
+## Technical Objectives and Scope
 
-The dataset (`data/raw/load_data.csv`) captures 15-minute interval telemetry spanning an entire operational calendar year (35,041 observations across 9 attributes).
+1. **Data Hygiene and Audit**: Conduct comprehensive quality assessment on high-frequency (15-minute interval) smart-meter telemetry, resolving timestamp continuity, sensor anomalies, and target class imbalance.
+2. **Feature Engineering**: Formulate temporal calendar dynamics (hour of day, day of week, month, 15-minute slot index, weekend flags) and clean raw electrical telemetry.
+3. **Leakage-Free Temporal Validation**: Enforce chronological data partitions (January–November 2018 for development and cross-validation; December 2018 as a strictly isolated final holdout set).
+4. **Pipeline Encapsulation**: Construct robust scikit-learn transformers and pipelines to bundle custom domain cleaning, numerical imputation, and tree ensemble estimation.
+5. **Rigorous Evaluation**: Prioritize macro-averaged metrics ($F_1$-score, precision, recall) over raw accuracy to prevent majority-class bias.
+6. **Production-Ready Inference**: Provide a standalone, command-line batch inference script for operational scoring on unseen telemetry streams.
+
+---
+
+## Dataset Profile
+
+The dataset (`data/raw/load_data.csv`) records 15-minute telemetry observations across an industrial power system over an entire calendar year (35,041 total observations across 9 attributes).
 
 ### Attribute Schema
 
-| Column Name | Data Type | Description | Unit / Format |
+| Column Name | Type | Description | Range / Unit |
 |---|:---:|---|---|
-| `Date_Time` | `datetime` | Observation timestamp | `DD-MM-YYYY HH:MM` |
-| `Usage_kWh` | `float64` | Real active energy consumption | kWh |
-| `Lagging_Current_Reactive.Power_kVarh` | `float64` | Lagging reactive power consumption | kVarh |
-| `Leading_Current_Reactive_Power_kVarh` | `float64` | Leading reactive power consumption | kVarh |
-| `CO2(tCO2)` | `float64` | Greenhouse gas emission factor equivalent | $t\text{CO}_2$ |
-| `Lagging_Current_Power_Factor` | `float64` | Power factor during lagging inductive load | Ratio $[0, 100]$ |
-| `Leading_Current_Power_Factor` | `float64` | Power factor during leading capacitive load | Ratio $[0, 100]$ |
-| `NSM` | `int64` | Number of Seconds from Midnight | Seconds $[0, 86400)$ |
-| `Load_Type` | `category` | **Target Label**: `Light_Load`, `Medium_Load`, `Maximum_Load` | Multi-class label |
+| `Date_Time` | datetime | Timestamp of observation | DD-MM-YYYY HH:MM |
+| `Usage_kWh` | float64 | Active real energy consumption | Continuous (kWh) |
+| `Lagging_Current_Reactive.Power_kVarh` | float64 | Inductive reactive power consumption | Continuous (kVarh) |
+| `Leading_Current_Reactive_Power_kVarh` | float64 | Capacitive reactive power consumption | Continuous (kVarh) |
+| `CO2(tCO2)` | float64 | Equivalent greenhouse gas emissions | Continuous ($t\text{CO}_2$) |
+| `Lagging_Current_Power_Factor` | float64 | Inductive power factor ratio | Ratio $[0, 100]$ |
+| `Leading_Current_Power_Factor` | float64 | Capacitive power factor ratio | Ratio $[0, 100]$ |
+| `NSM` | int64 | Number of seconds elapsed from midnight | $[0, 86400)$ |
+| `Load_Type` | category | **Target Variable**: `Light_Load`, `Medium_Load`, `Maximum_Load` | Multi-class categorical |
 
-### Target Distribution
+### Target Class Distribution
 
-| Class Label | Frequency (Records) | Relative Share (%) | Nature |
+| Class Label | Observations | Proportion | Description |
 |---|:---:|:---:|---|
-| **`Light_Load`** | 18,073 | ~51.58% | Majority baseline class |
-| **`Medium_Load`** | 9,696 | ~27.67% | Secondary operational class |
-| **`Maximum_Load`** | 7,272 | ~20.75% | Minority peak load class |
+| **Light_Load** | 18,073 | 51.58% | Majority baseline state |
+| **Medium_Load** | 9,696 | 27.67% | Secondary operational state |
+| **Maximum_Load** | 7,272 | 20.75% | Peak operating capacity |
 
-> **Note on Evaluation:** Due to substantial class imbalance (~52% vs. ~21%), standard accuracy is insufficient. **Macro-averaged $F_1$-score** is established as the primary decision metric to ensure minority peak-load states are detected with equal fidelity.
-
-### Raw Data Missingness Summary
-
-| Feature Name | Missing Count | % Missing | Handling Strategy |
-|---|:---:|:---:|---|
-| `Usage_kWh` | 1,559 | 4.45% | Time-aware rolling median / iterative imputation |
-| `Lagging_Current_Reactive.Power_kVarh` | 876 | 2.50% | Forward fill with seasonal median fallback |
-| `Leading_Current_Reactive_Power_kVarh` | 1,156 | 3.30% | Forward fill with seasonal median fallback |
-| `CO2(tCO2)` | 455 | 1.30% | Derived from `Usage_kWh` emission coefficient |
-| `Lagging_Current_Power_Factor` | 350 | 1.00% | Bounded numerical imputation |
-| `Leading_Current_Power_Factor` | 1,471 | 4.20% | Bounded numerical imputation |
-| `NSM` | 455 | 1.30% | Deterministically recomputed from `Date_Time` |
-| `Date_Time` / `Load_Type` | 0 | 0.00% | Complete (no missing records) |
+*Evaluation Strategy*: Standard accuracy is biased by the 52% majority baseline. **Macro-averaged $F_1$-score** is established as the principal evaluation benchmark to ensure accurate recognition of peak load conditions.
 
 ---
 
-## 🏗️ Project Architecture
-
-The repository adheres to standardized data science engineering principles:
+## Repository Structure
 
 ```text
 Power System Load Classification/
-├── .gitignore                     # Git ignore rules for Python, virtualenvs & checkpoints
-├── Readme.md                      # Comprehensive project documentation
-├── requirements.txt               # Locked production & experimentation dependencies
+├── .gitignore                         # Version control ignore specifications
+├── Readme.md                          # Project documentation and performance report
+├── requirements.txt                   # Locked project dependencies
 ├── data/
 │   └── raw/
-│       └── load_data.csv          # Telemetry dataset (35,041 records)
+│       └── load_data.csv              # Industrial telemetry dataset (35,041 records)
 ├── models/
-│   ├── final_random_forest.joblib # Serialized production Random Forest pipeline
-│   └── model_metadata.json        # Feature schema, target classes, & training bounds
+│   ├── final_random_forest.joblib     # Exported scikit-learn pipeline (model + cleaner)
+│   └── model_metadata.json            # Model schema, feature list, and class labels
 ├── notebook/
-│   ├── data_audit.ipynb           # EDA, data hygiene, distributions & sanity audits
-│   └── feature_engineering_modeling.ipynb # Feature pipeline, CV evaluation & model training
+│   ├── data_audit.ipynb               # Exploratory analysis, data hygiene, and diagnostics
+│   └── feature_engineering_modeling.ipynb # Feature pipeline, CV tuning, and holdout evaluation
 ├── results/
-│   ├── final_metrics.json         # Final holdout evaluation performance metrics
-│   └── final_predictions.csv      # December holdout test predictions
+│   ├── final_metrics.json             # Quantified performance metrics on December holdout
+│   └── final_predictions.csv          # Prediction logs on December holdout test set
 └── src/
-    ├── __init__.py                # Source package initialization
-    ├── predict.py                 # Batch CLI inference pipeline
-    └── preprocessing.py           # Custom PowerFactorCleaner transformer
+    ├── __init__.py                    # Source package initialization
+    ├── predict.py                     # CLI batch inference script
+    └── preprocessing.py               # PowerFactorCleaner scikit-learn transformer
 ```
 
 ---
 
-## ⚙️ Environment Setup & Installation
+## Environment Setup and Installation
 
 ### Prerequisites
-- **Python:** Version `3.11` or higher
-- **Package Manager:** `pip`
 
-### Step-by-Step Installation
+- Python 3.11 or higher
+- `pip` package manager
 
-1. **Clone the Repository:**
+### Installation Steps
+
+1. **Clone the Repository**:
    ```bash
    git clone https://github.com/nishnarudkar/Power-System-Load-Classification.git
    cd Power-System-Load-Classification
    ```
 
-2. **Initialize Virtual Environment:**
-   - **Windows (PowerShell):**
+2. **Configure Virtual Environment**:
+   - **Windows (PowerShell)**:
      ```powershell
-     py -3.11 -m venv .venv
-     .\.venv\Scripts\Activate.ps1
+     python -m venv venv
+     .\venv\Scripts\Activate.ps1
      ```
-   - **Linux / macOS:**
+   - **Linux / macOS**:
      ```bash
-     python3.11 -m venv .venv
-     source .venv/bin/activate
+     python3 -m venv venv
+     source venv/bin/activate
      ```
 
-3. **Install Core Dependencies:**
+3. **Install Dependencies**:
    ```bash
-   python -m pip install --upgrade pip
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
-4. **Register Jupyter Kernel:**
-   ```bash
-   python -m ipykernel install --user --name power-load-ml --display-name "Python (Power Load ML)"
-   ```
-
 ---
 
-## 🔬 End-to-End Methodology
+## Methodology and Validation Strategy
 
 ```mermaid
 flowchart LR
-    A[Raw Telemetry Data] --> B[Data Audit & EDA]
-    B --> C[Timestamp Consistency & Imputation]
-    C --> D[Feature Engineering & Cyclic Encoding]
-    D --> E[Chronological Split: Dev vs Dec 2018 Holdout]
-    E --> F[Model Benchmarking & Hyperparameter Tuning]
-    F --> G[Final Holdout Evaluation & Reporting]
+    A[Raw Telemetry Data] --> B[Data Audit & Sanitation]
+    B --> C[Calendar & Electrical Feature Engineering]
+    C --> D[Chronological Split: Jan-Nov Dev vs Dec Holdout]
+    D --> E[Pipeline Training: Cleaner + Imputer + Random Forest]
+    E --> F[December Holdout Validation & Metric Export]
+    F --> G[CLI Batch Prediction Script]
 ```
 
-### 1. Data Audit & Exploratory Analysis (`notebook/data_audit.ipynb`)
-- Verification of continuous chronological timestamps.
-- Consistency cross-validation between `NSM` (Seconds from Midnight) and parsed `Date_Time`.
-- Correlation analysis between active/reactive power components and power factors.
+### 1. Data Cleaning and Preprocessing
 
-### 2. Time-Aware Preprocessing & Feature Engineering
-- **Cyclic Temporal Encodings:** Transform hour of day and month into sine/cosine harmonics:
-  $$\sin\left(\frac{2\pi \cdot \text{hour}}{24}\right), \quad \cos\left(\frac{2\pi \cdot \text{hour}}{24}\right)$$
-- **Lag & Rolling Dynamics:** Capture sequential momentum via exponential rolling means and previous-interval load shifts.
-- **Leakage Prevention:** All scalers, transformers, and imputers are strictly fitted on the development partition and only transformed on the test partition.
+- **Chronological Sorting**: Enforced strict temporal ordering on parsed timestamps.
+- **Power Factor Validation**: Addressed out-of-bounds sensor readings ($< 0$ or $> 100$) via a custom `PowerFactorCleaner` transformer, mapping invalid sensor artifacts to `NaN` values for subsequent median imputation.
+- **Duplicate Timestamp Resolution**: Evaluated duplicate sensor records on the December holdout using a quality-issue score, preserving the highest-integrity record and verifying complete 2,976-record continuity.
 
-### 3. Chronological Holdout Evaluation Strategy
-- **Development Set (Training & Cross-Validation):** January 1, 2018 – November 30, 2018 (11 months).
-- **Final Holdout Test Set:** December 1, 2018 – December 31, 2018 (1 full calendar month).
-- *Strict Rule:* Zero data from December 2018 is utilized for model selection, thresholding, or hyperparameter exploration.
+### 2. Feature Engineering
+
+The model incorporates both temporal structure and electrical dynamics:
+- **Temporal Calendar Attributes**: `Hour`, `Day_of_Week`, `Month`, `Time_Slot` (15-minute index from 0 to 95), and `Is_Weekend` binary indicator.
+- **Telemetry Indicators**: `Usage_kWh`, `Lagging_Current_Reactive.Power_kVarh`, `Leading_Current_Reactive_Power_kVarh`, `CO2(tCO2)`, `Lagging_Current_Power_Factor`, `Leading_Current_Power_Factor`.
+
+### 3. Chronological Holdout Protocol
+
+To simulate real-world deployment and prevent lookahead data leakage:
+- **Development & Cross-Validation**: January 1, 2018 to November 30, 2018 (32,064 observations).
+- **Final Holdout Test Partition**: December 1, 2018 to December 31, 2018 (2,976 observations).
+- *Strict Rule*: The December holdout partition was isolated and frozen until final model evaluation.
 
 ---
 
-## 📈 Benchmark Models & Evaluation Framework
+## Model Evaluation and Results
 
-### Planned Candidate Architectures
-1. **Dummy Baseline:** Stratified and majority-class heuristic classifier.
-2. **Regularized Multinomial Logistic Regression:** Linear baseline with standardized numerical inputs.
-3. **Random Forest Classifier:** Non-linear bagged ensemble capturing interaction terms.
-4. **Gradient Boosted Decision Trees (HistGradientBoosting / LightGBM):** Optimized tree ensemble capable of robust performance on tabular telemetry.
+### Validation Benchmarks (Development Set)
 
-### Metrics Matrix
+Models evaluated on the validation partition (October–November 2018):
 
-$$\text{Macro } F_1 = \frac{1}{K}\sum_{k=1}^K F_{1, k}, \quad K = 3$$
+| Model Architecture | Feature Subset | Validation Accuracy | Validation Macro $F_1$ |
+|---|---|:---:|:---:|
+| Dummy Classifier (Stratified) | Calendar | 48.36% | 0.2173 |
+| Decision Tree Classifier | Calendar | 83.47% | 0.7898 |
+| Random Forest Classifier | Calendar Only | 83.47% | 0.7898 |
+| **Combined Random Forest** | **Calendar + Telemetry** | **83.73%** | **0.7925** |
 
-| Model Architecture | Cross-Validation Macro $F_1$ | Holdout Test Accuracy | Holdout Test Macro $F_1$ | Status |
+### Final Evaluation on December 2018 Holdout
+
+The final frozen Random Forest pipeline was evaluated against the out-of-time December 2018 holdout partition (2,976 records):
+
+| Metric | Score |
+|---|:---:|
+| **Accuracy** | **89.15%** |
+| **Macro Precision** | **86.92%** |
+| **Macro Recall** | **87.15%** |
+| **Macro $F_1$-Score** | **86.31%** |
+
+### Per-Class Performance Breakdown
+
+| Class | Precision | Recall | $F_1$-Score | Support (Records) |
 |---|:---:|:---:|:---:|:---:|
-| **Dummy Heuristic** | *Baseline* | *Pending* | *Pending* | Planned |
-| **Logistic Regression** | *TBD* | *Pending* | *Pending* | Planned |
-| **Random Forest** | *TBD* | *Pending* | *Pending* | Planned |
-| **Gradient Boosting** | *TBD* | *Pending* | *Pending* | Planned |
+| **Light_Load** | 0.98 | 0.91 | 0.94 | 1,744 |
+| **Maximum_Load** | 0.90 | 0.76 | 0.82 | 528 |
+| **Medium_Load** | 0.73 | 0.95 | 0.82 | 704 |
+| **Macro Average** | **0.87** | **0.87** | **0.86** | **2,976** |
+| **Weighted Average** | **0.91** | **0.89** | **0.89** | **2,976** |
 
 ---
 
-## 🛡️ Best Practices & Quality Assurance
+## Batch Inference Pipeline
 
-- **Zero Data Leakage:** Preprocessing transformations do not peek across time splits.
-- **Reproducibility:** Seed pinning across all stochastic operations (`random_state=42`).
-- **Production Readiness:** Code structured for transition from notebook exploration to modular Python scripts in `src/`.
+The repository provides a standalone batch prediction utility in `src/predict.py`.
+
+### Running Predictions from CLI
+
+Execute predictions on any input CSV containing telemetry or calendar fields:
+
+```bash
+python src/predict.py --input data/raw/load_data.csv --output results/new_predictions.csv
+```
+
+### Script Execution Parameters
+
+- `--input` (required): Filepath to the raw CSV containing telemetry columns and `Date_Time`.
+- `--output` (optional, default: `results/new_predictions.csv`): Destination path for the scored predictions.
 
 ---
 
-## 📬 Submission & Author Details
+## Author and Project Information
 
-- **Candidate:** Nishant Narudkar
-- **Submission For:** USEReady Internship Assessment
-- **Deliverable:** Jupyter Notebook & GitHub Project Repository
-- **Repository:** [Power-System-Load-Classification](https://github.com/nishnarudkar/Power-System-Load-Classification)
+- **Candidate**: Nishant Narudkar
+- **Assessment**: USEReady Internship Selection Program
+- **Deliverable**: Data Science & Machine Learning Pipeline
+- **Repository**: [Power-System-Load-Classification](https://github.com/nishnarudkar/Power-System-Load-Classification)
