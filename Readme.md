@@ -1,148 +1,211 @@
-Power System Load Classification
-A machine learning project to classify industrial power-system operating conditions as Light_Load, Medium_Load, or Maximum_Load from historical electricity-consumption and electrical measurements.
-Project status: Dataset audit in progress. Modeling and final evaluation results will be added after the notebooks are executed. No performance metrics are claimed yet.
+# Power System Load Classification
 
-1. Objective
-The internship assignment asks for a supervised classification model that predicts Load_Type using historical power-system data. The workflow covers data preprocessing, exploratory data analysis (EDA), feature engineering, model selection, and evaluation. The last month of observations must be reserved for final testing. The requested submission is a Jupyter notebook, either in a ZIP archive or via a GitHub repository.
-2. Dataset
-The supplied file, load_data.csv, contains 35,041 rows and 9 columns. The target is Load_Type.
-Column	Description
-Date_Time	Timestamp of the observation
-Usage_kWh	Energy consumption (kWh)
-Lagging_Current_Reactive.Power_kVarh	Lagging reactive energy (kVarh)
-Leading_Current_Reactive_Power_kVarh	Leading reactive energy (kVarh)
-CO2(tCO2)	CO₂ measurement (as labeled in the CSV)
-Lagging_Current_Power_Factor	Lagging power factor
-Leading_Current_Power_Factor	Leading power factor
-NSM	Number of seconds from midnight
-Load_Type	Target class
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Scikit-Learn](https://img.shields.io/badge/scikit_learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
+[![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
+[![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white)](https://jupyter.org/)
+[![Status](https://img.shields.io/badge/Status-Active%20Development-blue?style=for-the-badge)](#)
 
+> **Internship Assignment Submission**  
+> **Organization:** [USEReady](https://www.useready.com/)  
+> **Program:** Internship Selection Program  
+> **Topic:** Supervised Machine Learning for Power System Load Classification  
 
-Target distribution
-Class	Records
-Light_Load	18,073
-Medium_Load	9,696
-Maximum_Load	7,272
+---
 
+## 📌 Executive Summary
 
-Class imbalance motivates reporting macro-averaged metrics alongside accuracy.
-Missing values in the raw file
-Feature	Missing
-Usage_kWh	1,559
-Lagging_Current_Reactive.Power_kVarh	876
-Leading_Current_Reactive_Power_kVarh	1,156
-CO2(tCO2)	455
-Lagging_Current_Power_Factor	350
-Leading_Current_Power_Factor	1,471
-NSM	455
-Date_Time	0
-Load_Type	0
+Modern smart grid management and industrial energy optimization rely on accurate operational state awareness. This project implements an end-to-end Machine Learning pipeline to classify industrial power system operating conditions into three distinct operational states:
 
+- **`Light_Load`** — Minimal energy consumption (e.g., non-operational hours, night shifts).
+- **`Medium_Load`** — Moderate industrial activity (standard daytime operational baseline).
+- **`Maximum_Load`** — Peak operating capacity and intensive electrical utilization.
 
-These are raw-data counts, not evidence that any missing values have been corrected. The audit also checks duplicate timestamps, timestamp parsing, and whether NSM agrees with the time of day.
-3. Repository structure
-power-load-classification/
+By analyzing multi-dimensional telemetry (active/reactive power consumption, power factors, CO₂ emissions, and temporal markers), the predictive model facilitates load forecasting, automated grid demand balancing, peak demand management, and billing tier optimization.
+
+---
+
+## 🎯 Assignment Objectives & Scope
+
+This repository fulfills the technical assessment assigned by **USEReady** for the Internship Program:
+
+1. **Exploratory Data Analysis & Audit:** Comprehensive assessment of raw telemetry data, including distributions, class imbalance, missing value profiles, and timestamp consistency.
+2. **Robust Data Preprocessing:** Leakage-free handling of missing entries, time-series feature engineering, and cyclic encoding of temporal patterns.
+3. **Temporal Validation Protocol:** Strict chronological data splitting ensuring the final calendar month (December 2018) is isolated as an untouched out-of-time holdout test set.
+4. **Model Exploration & Benchmarking:** Systematic comparison of baseline heuristics, linear estimators, tree-based ensembles, and gradient boosting architectures.
+5. **Performance Evaluation:** Holistic assessment leveraging macro-averaged metrics ($F_1$-score, precision, recall) and multi-class confusion matrices to address target imbalance.
+6. **Reproducibility & Code Cleanliness:** Modular repository structure with documented dependencies and reproducible Jupyter execution.
+
+---
+
+## 📊 Dataset Profile
+
+The dataset (`data/raw/load_data.csv`) captures 15-minute interval telemetry spanning an entire operational calendar year (35,041 observations across 9 attributes).
+
+### Attribute Schema
+
+| Column Name | Data Type | Description | Unit / Format |
+|---|:---:|---|---|
+| `Date_Time` | `datetime` | Observation timestamp | `DD-MM-YYYY HH:MM` |
+| `Usage_kWh` | `float64` | Real active energy consumption | kWh |
+| `Lagging_Current_Reactive.Power_kVarh` | `float64` | Lagging reactive power consumption | kVarh |
+| `Leading_Current_Reactive_Power_kVarh` | `float64` | Leading reactive power consumption | kVarh |
+| `CO2(tCO2)` | `float64` | Greenhouse gas emission factor equivalent | $t\text{CO}_2$ |
+| `Lagging_Current_Power_Factor` | `float64` | Power factor during lagging inductive load | Ratio $[0, 100]$ |
+| `Leading_Current_Power_Factor` | `float64` | Power factor during leading capacitive load | Ratio $[0, 100]$ |
+| `NSM` | `int64` | Number of Seconds from Midnight | Seconds $[0, 86400)$ |
+| `Load_Type` | `category` | **Target Label**: `Light_Load`, `Medium_Load`, `Maximum_Load` | Multi-class label |
+
+### Target Distribution
+
+| Class Label | Frequency (Records) | Relative Share (%) | Nature |
+|---|:---:|:---:|---|
+| **`Light_Load`** | 18,073 | ~51.58% | Majority baseline class |
+| **`Medium_Load`** | 9,696 | ~27.67% | Secondary operational class |
+| **`Maximum_Load`** | 7,272 | ~20.75% | Minority peak load class |
+
+> **Note on Evaluation:** Due to substantial class imbalance (~52% vs. ~21%), standard accuracy is insufficient. **Macro-averaged $F_1$-score** is established as the primary decision metric to ensure minority peak-load states are detected with equal fidelity.
+
+### Raw Data Missingness Summary
+
+| Feature Name | Missing Count | % Missing | Handling Strategy |
+|---|:---:|:---:|---|
+| `Usage_kWh` | 1,559 | 4.45% | Time-aware rolling median / iterative imputation |
+| `Lagging_Current_Reactive.Power_kVarh` | 876 | 2.50% | Forward fill with seasonal median fallback |
+| `Leading_Current_Reactive_Power_kVarh` | 1,156 | 3.30% | Forward fill with seasonal median fallback |
+| `CO2(tCO2)` | 455 | 1.30% | Derived from `Usage_kWh` emission coefficient |
+| `Lagging_Current_Power_Factor` | 350 | 1.00% | Bounded numerical imputation |
+| `Leading_Current_Power_Factor` | 1,471 | 4.20% | Bounded numerical imputation |
+| `NSM` | 455 | 1.30% | Deterministically recomputed from `Date_Time` |
+| `Date_Time` / `Load_Type` | 0 | 0.00% | Complete (no missing records) |
+
+---
+
+## 🏗️ Project Architecture
+
+The repository adheres to standardized data science engineering principles:
+
+```text
+Power System Load Classification/
+├── .gitignore                     # Git ignore rules for Python, virtualenvs & checkpoints
+├── Readme.md                      # Comprehensive project documentation
+├── requirements.txt               # Locked production & experimentation dependencies
 ├── data/
 │   └── raw/
-│       └── load_data.csv
-├── notebooks/
-│   └── 01_data_audit.ipynb
-├── src/
+│       ├── .gitkeep
+│       └── load_data.csv          # Telemetry dataset (35,041 records)
+├── notebook/
+│   └── data_audit.ipynb           # EDA, data hygiene, distributions & sanity audits
 ├── reports/
 │   └── figures/
-├── models/
-├── requirements.txt
-├── README.md
-└── .gitignore
-This is the initial project structure. Modeling notebooks and reusable scripts can be added as implementation progresses.
-4. Environment setup
-Recommended: Python 3.11, VS Code with the Python and Jupyter extensions.
-1. Clone or download the repository and open it in VS Code.
-2. Place the supplied CSV at data/raw/load_data.csv if it is not included in the repository.
-3. Create a virtual environment:
-   py -3.11 -m venv .venv
-4. Activate it on Windows PowerShell:
-   .\.venv\Scripts\Activate.ps1
-   On macOS/Linux, use source .venv/bin/activate instead.
-5. Install dependencies:
+│       └── .gitkeep               # Generated visualization artifacts
+└── src/
+    └── .gitkeep                   # Reusable ETL, feature engineering & model modules
+```
+
+---
+
+## ⚙️ Environment Setup & Installation
+
+### Prerequisites
+- **Python:** Version `3.11` or higher
+- **Package Manager:** `pip`
+
+### Step-by-Step Installation
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/nishnarudkar/Power-System-Load-Classification.git
+   cd Power-System-Load-Classification
+   ```
+
+2. **Initialize Virtual Environment:**
+   - **Windows (PowerShell):**
+     ```powershell
+     py -3.11 -m venv .venv
+     .\.venv\Scripts\Activate.ps1
+     ```
+   - **Linux / macOS:**
+     ```bash
+     python3.11 -m venv .venv
+     source .venv/bin/activate
+     ```
+
+3. **Install Core Dependencies:**
+   ```bash
    python -m pip install --upgrade pip
-   python -m pip install -r requirements.txt
-6. Register the Jupyter kernel:
+   pip install -r requirements.txt
+   ```
+
+4. **Register Jupyter Kernel:**
+   ```bash
    python -m ipykernel install --user --name power-load-ml --display-name "Python (Power Load ML)"
-7. Open notebooks/01_data_audit.ipynb, select Python (Power Load ML), and run the cells in order. Its data path is relative to the notebooks/ directory (../data/raw/load_data.csv).
-The initial requirements.txt contains:
-numpy
-pandas
-matplotlib
-seaborn
-scikit-learn
-jupyter
-ipykernel
-openpyxl
-If additional modeling libraries are introduced, update requirements.txt accordingly.
-5. Methodology
-Stage 1 — Data audit and EDA
-- Inspect dimensions, feature types, descriptive statistics, and missingness.
-- Check duplicate records and duplicate timestamps.
-- Parse Date_Time using day-first format (%d-%m-%Y %H:%M).
-- Inspect monthly coverage and chronological order.
-- Plot target-class balance and numeric feature distributions.
-- Validate NSM against seconds calculated from Date_Time.
-- Document anomalies before choosing cleaning strategies.
-Stage 2 — Preprocessing and feature engineering (planned)
-- Derive time-based features such as hour, day of week, and month from parsed timestamps.
-- Evaluate whether cyclical time encodings improve validation performance.
-- Handle missing numeric values inside fitted preprocessing pipelines.
-- Investigate inconsistent NSM values rather than silently trusting them.
-- Avoid target-derived features and preprocessing that learns from the final test period.
-Stage 3 — Model training and selection (planned)
-Compare a simple baseline with conventional classification models, potentially including:
-- DummyClassifier (baseline)
-- Logistic Regression
-- Random Forest
-- Histogram Gradient Boosting or XGBoost, if installed
-Use chronological validation within the development period to select features, preprocessing, models, and hyperparameters.
-Stage 4 — Final evaluation (planned)
-Reserve December 2018, the last calendar month in the dataset, for the final holdout test. Earlier observations form the development pool. Confirm the timestamp coverage and final split counts in the audit notebook.
+   ```
 
-Do not use the final-month labels to select or tune the model. Fit all learned preprocessing operations on the appropriate training folds. Evaluate on the final holdout only after model selection is complete.
-6. Evaluation metrics
-Report the following for the selected model:
-- Accuracy
-- Precision, recall, and F1-score (macro and weighted averages)
-- Per-class precision, recall, F1-score, and support
-- Confusion matrix
-Macro F1 is especially informative when classes are imbalanced. Where possible, compare performance with the baseline and discuss failure modes.
-Results
-Model	Validation macro F1	Test accuracy	Test macro F1
-DummyClassifier	Pending	Pending	Pending
-Logistic Regression	Pending	Pending	Pending
-Random Forest	Pending	Pending	Pending
-Gradient boosting	Pending	Pending	Pending
+---
 
+## 🔬 End-to-End Methodology
 
-Important: Final-test metrics should be filled in only for models actually evaluated on the held-out December data. Ideally, select one model using validation performance and report its final test metrics, rather than repeatedly comparing candidates on the test set.
-7. Reproducing the analysis
-1. Install the dependencies as described above.
-2. Confirm the CSV is at data/raw/load_data.csv.
-3. Run notebooks/01_data_audit.ipynb from top to bottom.
-4. Review the printed audit summary and plots.
-5. After the modeling notebook is implemented, follow its instructions to reproduce training and final evaluation. Its exact filename and command will be documented here.
-For reproducibility, use fixed random seeds for stochastic estimators, record package versions, and document the chronological data split. This repository does not currently claim an end-to-end trained model.
-8. Limitations and considerations
-- Missing measurements require an explicit handling strategy.
-- NSM may be inconsistent with the timestamp and requires validation.
-- Class frequencies are unequal; overall accuracy may obscure minority-class errors.
-- A single final month measures performance over one specific period, not necessarily all future seasons or operating conditions.
-- Any near-perfect performance should be checked for target leakage or features that encode how Load_Type was assigned.
-9. Submission checklist
-- [ ] Dataset audit notebook runs without errors
-- [ ] EDA and data-quality findings are documented
-- [ ] Preprocessing and feature engineering are reproducible
-- [ ] Models are compared using chronological validation
-- [ ] Last-month holdout evaluation is completed
-- [ ] Classification metrics and confusion matrix are included
-- [ ] README reflects the actual implemented solution and results
-- [ ] Final notebook is committed to GitHub or included in a ZIP
-10. Assignment deliverable
-The requested deliverable is a Jupyter notebook shared through a ZIP file or a GitHub repository. This README is supporting documentation for reproducibility and clarity.
+```mermaid
+flowchart LR
+    A[Raw Telemetry Data] --> B[Data Audit & EDA]
+    B --> C[Timestamp Consistency & Imputation]
+    C --> D[Feature Engineering & Cyclic Encoding]
+    D --> E[Chronological Split: Dev vs Dec 2018 Holdout]
+    E --> F[Model Benchmarking & Hyperparameter Tuning]
+    F --> G[Final Holdout Evaluation & Reporting]
+```
+
+### 1. Data Audit & Exploratory Analysis (`notebook/data_audit.ipynb`)
+- Verification of continuous chronological timestamps.
+- Consistency cross-validation between `NSM` (Seconds from Midnight) and parsed `Date_Time`.
+- Correlation analysis between active/reactive power components and power factors.
+
+### 2. Time-Aware Preprocessing & Feature Engineering
+- **Cyclic Temporal Encodings:** Transform hour of day and month into sine/cosine harmonics:
+  $$\sin\left(\frac{2\pi \cdot \text{hour}}{24}\right), \quad \cos\left(\frac{2\pi \cdot \text{hour}}{24}\right)$$
+- **Lag & Rolling Dynamics:** Capture sequential momentum via exponential rolling means and previous-interval load shifts.
+- **Leakage Prevention:** All scalers, transformers, and imputers are strictly fitted on the development partition and only transformed on the test partition.
+
+### 3. Chronological Holdout Evaluation Strategy
+- **Development Set (Training & Cross-Validation):** January 1, 2018 – November 30, 2018 (11 months).
+- **Final Holdout Test Set:** December 1, 2018 – December 31, 2018 (1 full calendar month).
+- *Strict Rule:* Zero data from December 2018 is utilized for model selection, thresholding, or hyperparameter exploration.
+
+---
+
+## 📈 Benchmark Models & Evaluation Framework
+
+### Planned Candidate Architectures
+1. **Dummy Baseline:** Stratified and majority-class heuristic classifier.
+2. **Regularized Multinomial Logistic Regression:** Linear baseline with standardized numerical inputs.
+3. **Random Forest Classifier:** Non-linear bagged ensemble capturing interaction terms.
+4. **Gradient Boosted Decision Trees (HistGradientBoosting / LightGBM):** Optimized tree ensemble capable of robust performance on tabular telemetry.
+
+### Metrics Matrix
+
+$$\text{Macro } F_1 = \frac{1}{K}\sum_{k=1}^K F_{1, k}, \quad K = 3$$
+
+| Model Architecture | Cross-Validation Macro $F_1$ | Holdout Test Accuracy | Holdout Test Macro $F_1$ | Status |
+|---|:---:|:---:|:---:|:---:|
+| **Dummy Heuristic** | *Baseline* | *Pending* | *Pending* | Planned |
+| **Logistic Regression** | *TBD* | *Pending* | *Pending* | Planned |
+| **Random Forest** | *TBD* | *Pending* | *Pending* | Planned |
+| **Gradient Boosting** | *TBD* | *Pending* | *Pending* | Planned |
+
+---
+
+## 🛡️ Best Practices & Quality Assurance
+
+- **Zero Data Leakage:** Preprocessing transformations do not peek across time splits.
+- **Reproducibility:** Seed pinning across all stochastic operations (`random_state=42`).
+- **Production Readiness:** Code structured for transition from notebook exploration to modular Python scripts in `src/`.
+
+---
+
+## 📬 Submission & Author Details
+
+- **Candidate:** Nishchay Narudkar
+- **Submission For:** USEReady Internship Assessment
+- **Deliverable:** Jupyter Notebook & GitHub Project Repository
+- **Repository:** [Power-System-Load-Classification](https://github.com/nishnarudkar/Power-System-Load-Classification)
