@@ -25,11 +25,12 @@ def prepare_features(df):
 
     df["Date_Time"] = pd.to_datetime(
         df["Date_Time"],
+        dayfirst=True,
         errors="raise"
     )
 
     df["Hour"] = df["Date_Time"].dt.hour
-    df["Day_of_Week"] = df["Date_Time"].dt.dayofweek
+    df["Day_of_Week"] = df["Date_Time"].dt.day_of_week
     df["Month"] = df["Date_Time"].dt.month
 
     df["Time_Slot"] = (
